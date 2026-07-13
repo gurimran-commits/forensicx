@@ -1,4 +1,4 @@
-# Python cache
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
@@ -8,20 +8,31 @@ __pycache__/
 venv/
 env/
 
-# Environment variables
-.env
+# SQLite
+*.sqlite3
+*.db
 
-# IDE files
+# Runtime
+*.pid
+*.log
+
+# Pytest
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+
+# IDE
 .vscode/
 .idea/
 
-# Logs
-*.log
-
-# Database
-*.db
-*.sqlite3
-
-# OS files
+# OS
 .DS_Store
 Thumbs.db
+
+# Coverage
+.coverage
+htmlcov/
+
+# Archives
+*.zip
