@@ -10,7 +10,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from forensicx.platform.enums import EvidenceStatus
+from forensicx.modules.evidence.models import EvidenceStatus
 
 
 class EvidenceBase(BaseModel):
@@ -36,7 +36,7 @@ class EvidenceUploadResponse(BaseModel):
 
     id: UUID
 
-    case_id: UUID
+    case_id: int
 
     original_filename: str
 
@@ -56,7 +56,7 @@ class EvidenceUploadResponse(BaseModel):
 
     status: EvidenceStatus
 
-    uploaded_by: UUID
+    uploaded_by: str
 
     created_at: datetime
 
@@ -93,6 +93,15 @@ class EvidenceListItem(BaseModel):
     created_at: datetime
 
 
+class EvidenceListResponse(BaseModel):
+    """Paginated case evidence list response."""
+
+    items: list[EvidenceListItem]
+    total: int = Field(ge=0)
+    limit: int = Field(ge=1, le=100)
+    offset: int = Field(ge=0)
+
+
 class EvidenceHashResponse(BaseModel):
     """Cryptographic hashes."""
 
@@ -117,6 +126,14 @@ class EvidenceMetadataResponse(BaseModel):
     file_size: int
 
     created_at: datetime
+
+
+class EvidenceValidationResponse(BaseModel):
+    """Result of validating an evidence upload without storing it."""
+
+    filename: str
+    extension: str
+    file_size: int = Field(ge=0)
 
 
 class EvidenceUpdateRequest(EvidenceBase):

@@ -1,26 +1,26 @@
-"""
-Dependency providers for the Evidence module.
-"""
+"""Dependency injection helpers for evidence management routes."""
 
 from __future__ import annotations
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 
-from forensicx.platform.config import get_settings
-from forensicx.platform.database import get_db
-
+from forensicx.modules.evidence.repository import EvidenceRepository
 from forensicx.modules.evidence.service import EvidenceService
+from forensicx.modules.evidence.services.hashing import HashingService
+from forensicx.modules.evidence.services.metadata import MetadataService
+from forensicx.modules.evidence.services.storage import StorageService
+from forensicx.platform.dependencies import database_session
 
 
 def evidence_service(
-    session: Session = Depends(get_db),
+    request: Request,
+    session: Session = Depends(database_session),
 ) -> EvidenceService:
-    """Provide an EvidenceService instance."""
-
-    settings = get_settings()
-
+    """Build an evidence service for the current request."""
     return EvidenceService(
-        session=session,
-        storage_root=settings.storage_path,
+        repository=EvidenceRepository(session),
+        storage=StorageService(request.app.state.settings.storage_path),
+        hashing=HashingService(),
+        metadata=MetadataService(),
     )

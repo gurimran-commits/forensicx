@@ -27,5 +27,5 @@ async def read_dashboard_overview(
     service: DashboardService = Depends(dashboard_service),
 ) -> DashboardOverview:
     """Return the authenticated dashboard overview."""
-    _ = (date_range, search, sort, principal)
-    return service.overview()
+    _ = (search, sort, principal)
+    return service.overview(date_range=date_range)

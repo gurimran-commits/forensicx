@@ -48,7 +48,8 @@ class Evidence(Base):
         default=lambda: str(uuid.uuid4()),
     )
 
-    case_id: Mapped[str] = mapped_column(
+    case_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey("cases.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -115,7 +116,7 @@ class Evidence(Base):
     )
 
     uploaded_by: Mapped[str] = mapped_column(
-        ForeignKey("users.id"),
+        String(120),
         nullable=False,
     )
 
@@ -136,5 +137,4 @@ class Evidence(Base):
         onupdate=func.now(),
     )
 
-    case = relationship("Case", back_populates="evidence")
-    uploader = relationship("User")
+    case: Mapped["CaseModel"] = relationship("CaseModel", back_populates="evidence")

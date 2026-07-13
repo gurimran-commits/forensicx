@@ -12,6 +12,7 @@ from fastapi.responses import FileResponse
 from forensicx.modules.auth.api import router as auth_router
 from forensicx.modules.cases.api import router as cases_router
 from forensicx.modules.dashboard.api import router as dashboard_router
+from forensicx.modules.evidence.api import router as evidence_router
 from forensicx.platform.config import Settings, get_settings
 from forensicx.platform.database import initialize_database
 from forensicx.platform.errors import register_exception_handlers
@@ -48,6 +49,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(dashboard_router, prefix="/api/v1")
     app.include_router(cases_router, prefix="/api/v1")
+    app.include_router(evidence_router, prefix="/api/v1")
 
     @app.get("/", include_in_schema=False)
     async def dashboard_page() -> FileResponse:
