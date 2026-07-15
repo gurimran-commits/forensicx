@@ -138,3 +138,9 @@ class Evidence(Base):
     )
 
     case: Mapped["CaseModel"] = relationship("CaseModel", back_populates="evidence")
+    custody_events = relationship(
+        "ChainOfCustody",
+        back_populates="evidence",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )

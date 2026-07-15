@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from forensicx.platform.models import Base
 from forensicx.platform.config import Settings
+from forensicx.platform import model_registry
 
 
 LOGGER = logging.getLogger(__name__)
