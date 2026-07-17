@@ -4,6 +4,8 @@ import logging
 from pathlib import Path
 
 from fastapi import UploadFile
+from forensicx.modules.chain_of_custody.schemas import CustodyCreate
+from forensicx.modules.chain_of_custody.service import ChainOfCustodyService
 
 from forensicx.modules.evidence.models import (
     Evidence,
@@ -28,11 +30,13 @@ class EvidenceService:
         storage: StorageService,
         hashing: HashingService,
         metadata: MetadataService,
+        custody_service: ChainOfCustodyService,
     ) -> None:
         self._repository = repository
         self._storage = storage
         self._hashing = hashing
         self._metadata = metadata
+        self._custody = custody_service
 
     async def upload(
         self,
@@ -80,6 +84,15 @@ class EvidenceService:
         )
 
         saved = self._repository.create(evidence)
+        self._custody.record_event(
+            CustodyCreate(
+                evidence_id=saved.id,
+                action="uploaded",
+                performed_by=uploaded_by,
+                location=None,
+                notes="Evidence uploaded into ForensicX",
+            )
+        )
         LOGGER.info("Registered evidence %s for case %s", saved.id, case_id)
         return saved
 
@@ -111,11 +124,29 @@ class EvidenceService:
             LOGGER.error("Evidence file is missing for record %s", evidence.id)
             raise ForensicXError("Evidence file is unavailable", 404)
         LOGGER.info("Prepared evidence %s for download", evidence.id)
+        self._custody.record_event(
+            CustodyCreate(
+                evidence_id=evidence.id,
+                action="downloaded",
+                performed_by=evidence.uploaded_by,
+                location=None,
+                notes="Evidence downloaded",
+            )
+        )
         return evidence
 
     def delete(self, evidence_id: str) -> Evidence:
         """Delete evidence."""
         evidence = self._require_evidence(evidence_id)
+        self._custody.record_event(
+            CustodyCreate(
+                evidence_id=evidence.id,
+                action="deleted",
+                performed_by=evidence.uploaded_by,
+                location=None,
+                notes="Evidence deleted",
+            )
+        )
         self._repository.delete(evidence)
         LOGGER.info("Deleted evidence record %s", evidence.id)
         return evidence

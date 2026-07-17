@@ -13,11 +13,11 @@ from forensicx.modules.chain_of_custody.repository import (
 from forensicx.modules.chain_of_custody.service import (
     ChainOfCustodyService,
 )
-from forensicx.platform.dependencies import get_db
+from forensicx.platform.dependencies import database_session
 
 
 def custody_repository(
-    session: Session = Depends(get_db),
+    session: Session = Depends(database_session)
 ) -> ChainOfCustodyRepository:
     """Provide a ChainOfCustodyRepository instance."""
     return ChainOfCustodyRepository(session)
