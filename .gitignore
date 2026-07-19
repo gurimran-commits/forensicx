@@ -1,17 +1,19 @@
-# Database
+# Development database
 data/
 *.sqlite3
 *.db
 
-# Temporary files
-work/
+# Generated output
 outputs/
+work/
 *.zip
 
 # Python
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.coverage
+htmlcov/
 
 # Virtual environments
 venv/
@@ -25,4 +27,3 @@ ddosenv/
 # OS
 .DS_Store
 Thumbs.db
-
