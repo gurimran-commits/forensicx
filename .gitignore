@@ -1,0 +1,28 @@
+# Database
+data/
+*.sqlite3
+*.db
+
+# Temporary files
+work/
+outputs/
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+ddosenv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
