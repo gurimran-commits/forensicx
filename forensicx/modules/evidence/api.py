@@ -155,15 +155,14 @@ async def get_evidence_hashes(
 @router.delete(
     "/{evidence_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete evidence registration",
-    description="Deletes the registered evidence database record.",
+    summary="Soft-delete evidence registration",
+    description="Archives the evidence registration while retaining its database row and stored file.",
 )
 async def delete_evidence(
     evidence_id: UUID,
     principal: Principal = Depends(require_role("evidence:write")),
     service: EvidenceService = Depends(evidence_service),
 ) -> Response:
-    """Delete one evidence registration."""
-    _ = principal
-    service.delete(str(evidence_id))
+    """Soft-delete one evidence registration without removing the stored file."""
+    service.delete(str(evidence_id), performed_by=principal.subject)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

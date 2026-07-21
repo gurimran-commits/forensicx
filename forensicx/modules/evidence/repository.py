@@ -25,19 +25,21 @@ class EvidenceRepository:
         return evidence
 
     def get_by_id(self, evidence_id: str) -> Evidence | None:
-        """Return an evidence item by ID."""
+        """Return a non-archived evidence item by ID."""
         statement = (
             select(Evidence)
             .where(Evidence.id == str(evidence_id))
+            .where(Evidence.status != EvidenceStatus.ARCHIVED)
         )
 
         return self._session.scalar(statement)
 
     def get_by_sha256(self, sha256: str) -> Evidence | None:
-        """Return evidence with matching SHA-256."""
+        """Return non-archived evidence with matching SHA-256."""
         statement = (
             select(Evidence)
             .where(Evidence.sha256 == sha256)
+            .where(Evidence.status != EvidenceStatus.ARCHIVED)
         )
 
         return self._session.scalar(statement)
@@ -52,6 +54,7 @@ class EvidenceRepository:
         statement = (
             select(Evidence)
             .where(Evidence.case_id == case_id)
+            .where(Evidence.status != EvidenceStatus.ARCHIVED)
             .offset(offset)
             .limit(limit)
             .order_by(Evidence.created_at.desc())
@@ -65,10 +68,10 @@ class EvidenceRepository:
         self._session.flush()
         return evidence
 
-    def delete(self, evidence: Evidence) -> None:
-        """Delete an evidence record."""
-        self._session.delete(evidence)
-        self._session.flush()
+    def archive(self, evidence: Evidence) -> Evidence:
+        """Mark an evidence record as archived without removing it or its file."""
+        evidence.status = EvidenceStatus.ARCHIVED
+        return self.update(evidence)
 
     def exists(self, evidence_id: str) -> bool:
         """Check whether an evidence record exists."""
@@ -76,6 +79,7 @@ class EvidenceRepository:
             select(func.count())
             .select_from(Evidence)
             .where(Evidence.id == str(evidence_id))
+            .where(Evidence.status != EvidenceStatus.ARCHIVED)
         )
 
         return bool(self._session.scalar(statement))
@@ -86,13 +90,18 @@ class EvidenceRepository:
             select(func.count())
             .select_from(Evidence)
             .where(Evidence.case_id == case_id)
+            .where(Evidence.status != EvidenceStatus.ARCHIVED)
         )
 
         return int(self._session.scalar(statement) or 0)
 
     def count_all(self) -> int:
         """Return the total number of registered evidence items."""
-        statement = select(func.count()).select_from(Evidence)
+        statement = (
+            select(func.count())
+            .select_from(Evidence)
+            .where(Evidence.status != EvidenceStatus.ARCHIVED)
+        )
         return int(self._session.scalar(statement) or 0)
 
     def count_by_status(self, status: EvidenceStatus) -> int:
@@ -104,6 +113,7 @@ class EvidenceRepository:
         """Return evidence counts grouped by stored file extension."""
         statement = (
             select(Evidence.file_extension, func.count())
+            .where(Evidence.status != EvidenceStatus.ARCHIVED)
             .group_by(Evidence.file_extension)
             .order_by(func.count().desc(), Evidence.file_extension.asc())
         )
@@ -120,6 +130,7 @@ class EvidenceRepository:
         statement = (
             select(Evidence)
             .where(Evidence.case_id == case_id)
+            .where(Evidence.status != EvidenceStatus.ARCHIVED)
             .where(Evidence.original_filename.ilike(f"%{query}%"))
             .offset(offset)
             .limit(limit)

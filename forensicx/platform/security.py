@@ -12,11 +12,13 @@ from typing import Any
 
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from passlib.context import CryptContext
 
 from forensicx.platform.errors import ForensicXError
 
 
 bearer_scheme = HTTPBearer(auto_error=False)
+password_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__truncate_error=True)
 
 
 @dataclass(frozen=True)
@@ -25,6 +27,19 @@ class Principal:
 
     subject: str
     roles: frozenset[str]
+
+
+def hash_password(password: str) -> str:
+    """Hash a user password with bcrypt for persistent storage."""
+    return password_context.hash(password)
+
+
+def verify_password(password: str, hashed_password: str) -> bool:
+    """Safely verify a plaintext password against its bcrypt hash."""
+    try:
+        return password_context.verify(password, hashed_password)
+    except (TypeError, ValueError):
+        return False
 
 
 def _b64url(data: bytes) -> str:

@@ -1,50 +1,55 @@
 # ForensicX
 
-ForensicX is a modular Digital Forensics and Incident Response platform built with FastAPI, Pydantic v2, SQLAlchemy 2, and a dark dashboard UI.
+ForensicX is a FastAPI backend for case management, evidence registration, chain-of-custody events, and bounded forensic analysis.
 
-## Implemented Modules
+## Setup
 
-- Dashboard REST API with JWT/RBAC protection.
-- Case Management REST API with SQLAlchemy ORM persistence.
-- Browser dashboard connected to the REST API.
+Use Python 3.12 or later. Create and activate a virtual environment, then install the application and its development tools:
 
-## Local Run
-
-```powershell
-python -m uvicorn forensicx.main:app --host 127.0.0.1 --port 8770
+```bash
+python -m venv .venv
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
 ```
 
-Open:
+Run the test suite with:
 
-- Dashboard: http://127.0.0.1:8770/dashboard
-- API docs: http://127.0.0.1:8770/api/docs
-
-## Configuration
-
-Environment variables:
-
-- `FORENSICX_DATABASE_PATH`: SQLite database path for local development.
-- `FORENSICX_JWT_SECRET`: JWT signing secret. Required in production.
-- `FORENSICX_ACCESS_TOKEN_MINUTES`: Access token lifetime.
-- `FORENSICX_CORS_ORIGINS`: Comma-separated allowed origins.
-- `FORENSICX_RATE_LIMIT_PER_MINUTE`: Per-client request limit.
-
-## Verification
-
-```powershell
-python -m compileall forensicx tests
+```bash
 python -m pytest
 ```
 
-## Architecture
+## Configuration
 
-The backend follows feature-based Clean Architecture boundaries:
+Configuration is read from environment variables when the application starts. Defaults are shown below.
 
-- `platform`: shared configuration, database, security, middleware, and error handling.
-- `modules/<feature>/api.py`: FastAPI route adapters.
-- `modules/<feature>/service.py`: application use cases.
-- `modules/<feature>/repository.py`: persistence adapter.
-- `modules/<feature>/models.py`: SQLAlchemy ORM models.
-- `modules/<feature>/schemas.py`: Pydantic DTOs.
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `FORENSICX_DATABASE_PATH` | `data/forensicx.sqlite3` | SQLite database location. |
+| `FORENSICX_STORAGE_PATH` | `storage` | Root directory for stored evidence files. |
+| `FORENSICX_MAX_UPLOAD_SIZE` | `1073741824` | Maximum upload size in bytes (1 GiB). |
+| `FORENSICX_ALLOWED_EXTENSIONS` | `.zip,.7z,.rar,.pcap,.pcapng,.img,.iso,.e01,.raw,.mem,.dmp,.bin,.exe,.dll,.pdf,.docx,.xlsx,.csv,.json,.xml,.txt,.jpg,.jpeg,.png` | Comma-separated permitted file extensions. |
+| `FORENSICX_JWT_SECRET` | generated per process in development | Required when `FORENSICX_ENV=production`. |
+| `FORENSICX_ACCESS_TOKEN_MINUTES` | `60` | JWT lifetime in minutes. |
+| `FORENSICX_CORS_ORIGINS` | `http://127.0.0.1:8765,http://127.0.0.1:8770` | Comma-separated allowed origins. |
+| `FORENSICX_ENV` | `development` | Set to `production` to require a JWT secret and disable the development-token endpoint. |
+| `FORENSICX_LOG_LEVEL` | `INFO` | Python logging level. |
+| `FORENSICX_RATE_LIMIT_PER_MINUTE` | `120` | Per-client request limit. |
 
-No module should reach into another module's internals. Integration should happen through services, DTOs, or explicit platform contracts.
+For production, provide a persistent, high-entropy JWT secret before starting the service:
+
+```bash
+export FORENSICX_ENV=production
+export FORENSICX_JWT_SECRET="replace-with-a-long-random-secret"
+```
+
+## Run
+
+Start the API from the repository root:
+
+```bash
+uvicorn forensicx.main:app --host 127.0.0.1 --port 8770
+```
+
+Interactive API documentation is available at `http://127.0.0.1:8770/api/docs`.

@@ -16,6 +16,7 @@ from forensicx.modules.cases.api import router as cases_router
 from forensicx.modules.dashboard.api import router as dashboard_router
 from forensicx.modules.evidence.api import router as evidence_router
 from forensicx.modules.forensic_engine.api import router as forensic_engine_router
+from forensicx.modules.ioc.api import router as ioc_router
 from forensicx.platform.config import Settings, get_settings
 from forensicx.platform.database import initialize_database
 from forensicx.platform.errors import register_exception_handlers
@@ -54,6 +55,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(cases_router, prefix="/api/v1")
     app.include_router(evidence_router, prefix="/api/v1")
     app.include_router(forensic_engine_router, prefix="/api/v1")
+    app.include_router(ioc_router, prefix="/api/v1")
     app.include_router(custody_router, prefix="/api/v1")
 
     @app.get("/", include_in_schema=False)

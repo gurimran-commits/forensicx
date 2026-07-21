@@ -36,6 +36,10 @@ class CaseRepository:
         LOGGER.info("Created case %s", case.case_number)
         return case
 
+    def rollback(self) -> None:
+        """Reset the session after a failed insert so it can be retried."""
+        self._session.rollback()
+
     def get_by_number(self, case_number: str) -> CaseModel | None:
         """Return a case by its public case number."""
         return self._session.scalar(select(CaseModel).where(CaseModel.case_number == case_number))

@@ -135,21 +135,22 @@ class EvidenceService:
         )
         return evidence
 
-    def delete(self, evidence_id: str) -> Evidence:
-        """Delete evidence."""
+    def delete(self, evidence_id: str, performed_by: str | None = None) -> Evidence:
+        """Soft-delete evidence while retaining its database row and stored file."""
         evidence = self._require_evidence(evidence_id)
+        actor = performed_by or evidence.uploaded_by
         self._custody.record_event(
             CustodyCreate(
                 evidence_id=evidence.id,
-                action="deleted",
-                performed_by=evidence.uploaded_by,
+                action="archived",
+                performed_by=actor,
                 location=None,
-                notes="Evidence deleted",
+                notes="Evidence registration soft-deleted; stored file retained",
             )
         )
-        self._repository.delete(evidence)
-        LOGGER.info("Deleted evidence record %s", evidence.id)
-        return evidence
+        archived = self._repository.archive(evidence)
+        LOGGER.info("Soft-deleted evidence record %s; storage file retained", archived.id)
+        return archived
 
     def _require_evidence(self, evidence_id: str) -> Evidence:
         """Return evidence or raise a consistent not-found error."""
