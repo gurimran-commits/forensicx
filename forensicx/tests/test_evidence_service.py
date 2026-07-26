@@ -7,6 +7,8 @@ from io import BytesIO
 from pathlib import Path
 
 from fastapi import UploadFile
+import pytest
+from fastapi import HTTPException
 
 from forensicx.modules.cases.models import CaseModel
 from forensicx.modules.chain_of_custody.repository import ChainOfCustodyRepository
@@ -16,6 +18,7 @@ from forensicx.modules.evidence.service import EvidenceService
 from forensicx.modules.evidence.services.hashing import HashingService
 from forensicx.modules.evidence.services.metadata import MetadataService
 from forensicx.modules.evidence.services.storage import StorageService
+from forensicx.modules.evidence.services.validator import EvidenceValidator
 from forensicx.platform.config import Settings
 from forensicx.platform.database import configure_session_factory
 from forensicx.platform import model_registry as _model_registry
@@ -55,22 +58,38 @@ def test_evidence_service_validates_uploads_and_retrieves_files(tmp_path: Path) 
         )
         session.add(case)
         session.flush()
+        custody = ChainOfCustodyService(ChainOfCustodyRepository(session))
         service = EvidenceService(
             repository=EvidenceRepository(session),
             storage=StorageService(settings.storage_path),
             hashing=HashingService(),
             metadata=MetadataService(),
-            custody_service=ChainOfCustodyService(ChainOfCustodyRepository(session)),
+            custody_service=custody,
+            validator=EvidenceValidator(settings.max_upload_size, settings.allowed_extensions),
         )
 
         filename, extension, size = asyncio.run(service.validate_upload(_upload("note.txt", b"evidence bytes")))
         saved = asyncio.run(service.upload(case.id, "analyst", _upload("note.txt", b"evidence bytes")))
         fetched = service.get(saved.id)
+        downloaded = service.download(saved.id)
+        archived = service.delete(saved.id, performed_by="reviewer")
+        events = custody.list_events(saved.id, limit=10, offset=0)
 
         assert (filename, extension, size) == ("note.txt", ".txt", len(b"evidence bytes"))
         assert fetched.id == saved.id
         assert fetched.original_filename == "note.txt"
         assert Path(fetched.storage_path).is_file()
         assert Path(fetched.storage_path).read_bytes() == b"evidence bytes"
+        assert downloaded.id == saved.id
+        assert archived.status.value == "archived"
+        assert {event.action for event in events.items} == {"uploaded", "downloaded", "archived"}
     finally:
         session.close()
+
+
+def test_evidence_validator_uses_injected_limits() -> None:
+    validator = EvidenceValidator(4, (".custom",))
+
+    assert asyncio.run(validator.validate(_upload("sample.custom", b"data"))) == 4
+    with pytest.raises(HTTPException, match="File exceeds maximum allowed size"):
+        asyncio.run(validator.validate(_upload("sample.custom", b"large")))

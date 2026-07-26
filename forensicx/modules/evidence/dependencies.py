@@ -13,6 +13,7 @@ from forensicx.modules.evidence.service import EvidenceService
 from forensicx.modules.evidence.services.hashing import HashingService
 from forensicx.modules.evidence.services.metadata import MetadataService
 from forensicx.modules.evidence.services.storage import StorageService
+from forensicx.modules.evidence.services.validator import EvidenceValidator
 from forensicx.platform.dependencies import database_session
 
 
@@ -28,4 +29,8 @@ def evidence_service(
         hashing=HashingService(),
         metadata=MetadataService(),
         custody_service=custody,
+        validator=EvidenceValidator(
+            request.app.state.settings.max_upload_size,
+            request.app.state.settings.allowed_extensions,
+        ),
     )

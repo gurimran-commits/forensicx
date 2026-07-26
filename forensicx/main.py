@@ -61,13 +61,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/", include_in_schema=False)
     async def dashboard_page() -> FileResponse:
         """Serve the ForensicX dashboard shell."""
-        dashboard_path = Path(__file__).resolve().parent.parent / "outputs" / "forensicx-dashboard.html"
+        dashboard_path = Path(__file__).resolve().parent / "outputs" / "dashboard.html"
         return FileResponse(dashboard_path)
 
     @app.get("/dashboard", include_in_schema=False)
     async def dashboard_alias() -> FileResponse:
         """Serve the dashboard shell from a named route."""
-        dashboard_path = Path(__file__).resolve().parent.parent / "outputs" / "forensicx-dashboard.html"
+        dashboard_path = Path(__file__).resolve().parent / "outputs" / "dashboard.html"
         return FileResponse(dashboard_path)
 
     LOGGER.info("ForensicX API configured with database %s", active_settings.database_path)

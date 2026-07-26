@@ -31,12 +31,14 @@ class EvidenceService:
         hashing: HashingService,
         metadata: MetadataService,
         custody_service: ChainOfCustodyService,
+        validator: EvidenceValidator,
     ) -> None:
         self._repository = repository
         self._storage = storage
         self._hashing = hashing
         self._metadata = metadata
         self._custody = custody_service
+        self._validator = validator
 
     async def upload(
         self,
@@ -48,7 +50,7 @@ class EvidenceService:
     ) -> Evidence:
         """Upload and register new evidence."""
 
-        await EvidenceValidator.validate(upload)
+        await self._validator.validate(upload)
 
         saved_path, stored_filename = self._storage.save(
             str(case_id),
@@ -98,7 +100,7 @@ class EvidenceService:
 
     async def validate_upload(self, upload: UploadFile) -> tuple[str, str, int]:
         """Validate an evidence upload without storing it."""
-        size = await EvidenceValidator.validate(upload)
+        size = await self._validator.validate(upload)
         filename = upload.filename or ""
         extension = Path(filename).suffix.lower()
         LOGGER.info("Validated evidence upload %s (%d bytes)", filename, size)
