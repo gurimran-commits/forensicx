@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from forensicx.modules.correlation.api import router as correlation_router
+
 import logging
 from pathlib import Path
 
@@ -57,6 +59,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(forensic_engine_router, prefix="/api/v1")
     app.include_router(ioc_router, prefix="/api/v1")
     app.include_router(custody_router, prefix="/api/v1")
+    app.include_router(correlation_router)
 
     @app.get("/", include_in_schema=False)
     async def dashboard_page() -> FileResponse:
