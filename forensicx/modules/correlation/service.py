@@ -13,6 +13,8 @@ from forensicx.modules.correlation.schemas import (
     CorrelationUpdate,
 )
 
+from forensicx.modules.correlation.engine import CorrelationEngine
+from forensicx.modules.ioc.repository import IocRepository
 
 class CorrelationService:
     """Business logic for correlation management."""
@@ -20,7 +22,12 @@ class CorrelationService:
     def __init__(self, session: Session) -> None:
         self._session = session
         self._repository = CorrelationRepository(session)
+    
+        self._ioc_repository = IocRepository(session)
 
+        self._engine = CorrelationEngine(
+            self._ioc_repository,
+        )    
     def create(self, data: CorrelationCreate) -> Correlation:
         """Create a new correlation."""
 
@@ -83,3 +90,46 @@ class CorrelationService:
     def count(self) -> int:
         """Return total correlations."""
         return self._repository.count_all()
+
+    def correlate_evidence(
+        self,
+        evidence_id: str,
+    ) -> int:
+        """
+        Discover and persist correlations for one evidence item.
+
+        Returns the number of newly created correlations.
+        """
+
+        created = 0
+
+        iocs = self._ioc_repository.list_for_evidence(
+            evidence_id,
+            offset=0,
+            limit=10000,
+        )
+
+        for ioc in iocs:
+
+            candidates = self._engine.correlate_ioc(ioc)
+
+            for candidate in candidates:
+
+                correlation = Correlation(
+                    case_id=candidate.case_id,
+                    source_type=candidate.source_type,
+                    source_id=candidate.source_id,
+                    target_type=candidate.target_type,
+                    target_id=candidate.target_id,
+                    correlation_type=candidate.correlation_type,
+                    confidence=candidate.confidence,
+                    details=candidate.details,
+                )
+
+                self._repository.create(correlation)
+                created += 1
+
+        self._session.commit()
+
+        return created
+      

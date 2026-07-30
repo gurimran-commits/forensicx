@@ -9,8 +9,9 @@ from forensicx.modules.evidence.repository import EvidenceRepository
 from forensicx.modules.ioc.repository import IocRepository
 from forensicx.modules.ioc.service import IocExtractionService
 from forensicx.platform.dependencies import database_session
+from forensicx.modules.correlation.service import CorrelationService
 
 
 def ioc_extraction_service(request: Request, session: Session = Depends(database_session)) -> IocExtractionService:
     """Build a request-scoped IOC extraction service."""
-    return IocExtractionService(EvidenceRepository(session), IocRepository(session), request.app.state.settings.storage_path)
+    return IocExtractionService(EvidenceRepository(session), IocRepository(session),CorrelationService(session), request.app.state.settings.storage_path)

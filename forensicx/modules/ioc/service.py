@@ -9,14 +9,15 @@ from forensicx.modules.ioc.extractors import extract_iocs
 from forensicx.modules.ioc.models import Ioc
 from forensicx.modules.ioc.repository import IocRepository
 from forensicx.platform.errors import ForensicXError
-
+from forensicx.modules.correlation.service import CorrelationService
 
 class IocExtractionService:
     """Extract and persist supported indicators without modifying evidence."""
 
-    def __init__(self, evidence_repository: EvidenceRepository, repository: IocRepository, storage_root: Path) -> None:
+    def __init__(self, evidence_repository: EvidenceRepository, repository: IocRepository, correlation_service: CorrelationService, storage_root: Path) -> None:
         self._evidence_repository = evidence_repository
         self._repository = repository
+        self._correlation_service = correlation_service
         self._storage_root = storage_root.resolve()
 
     def extract(self, evidence_id: str) -> list[Ioc]:
@@ -28,7 +29,16 @@ class IocExtractionService:
         if not path.is_file() or self._storage_root not in path.parents:
             raise ForensicXError("Evidence file is unavailable", 404)
         text = path.read_bytes().decode("utf-8", errors="ignore")
-        return self._repository.add_new(evidence.id, extract_iocs(text))
+        records = self._repository.add_new(
+            evidence.id,
+            extract_iocs(text),
+        )
+
+        self._correlation_service.correlate_evidence(
+            evidence.id,
+        )
+
+        return records
 
     def list(self, evidence_id: str, *, offset: int, limit: int) -> list[Ioc]:
         """List extracted indicators after confirming the evidence remains active."""
