@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 
 from forensicx.modules.ioc.models import Ioc
 
+from forensicx.modules.evidence.models import Evidence
+
 
 class IocRepository:
     """Store and retrieve normalized IOC records."""
@@ -71,6 +73,28 @@ class IocRepository:
 
         return list(self._session.scalars(statement))
 
+    def find_matching_with_case(
+        self,
+        indicator_type: str,
+        value: str,
+    ) -> list[tuple[Ioc, int]]:
+        """
+        Return matching IOCs together with the case ID
+        they belong to.
+        """
+        statement = (
+            select(Ioc, Evidence.case_id)
+            .join(Evidence, Ioc.evidence_id == Evidence.id)
+            .where(Ioc.indicator_type == indicator_type)
+            .where(Ioc.value == value)
+            .order_by(Ioc.created_at.asc())
+        )
+
+        return [
+            (ioc, case_id)
+            for ioc, case_id in self._session.execute(statement).all()
+        ]
+    
     def exists(
         self,
         evidence_id: str,

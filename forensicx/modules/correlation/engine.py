@@ -7,16 +7,20 @@ Responsible for discovering relationships between forensic entities.
 from __future__ import annotations
 
 from forensicx.modules.correlation.models import (
-    Correlation,
     CorrelationType,
     EntityType,
 )
 from forensicx.modules.correlation.schemas import CorrelationCreate
+from forensicx.modules.ioc.models import Ioc
+from forensicx.modules.ioc.repository import IocRepository
 
 
 class CorrelationEngine:
     """Engine responsible for discovering forensic relationships."""
 
+    def __init__(self, ioc_repository: IocRepository) -> None:
+        self._ioc_repository = ioc_repository
+    
     def correlate_ip(
         self,
         *,
@@ -131,3 +135,74 @@ class CorrelationEngine:
                 "url": url,
             },
         )
+        
+    
+    def correlate_ioc(self, ioc: Ioc) -> list[CorrelationCreate]:
+        """
+        Discover matching IOCs and generate correlation candidates.
+        """
+
+        matches = self._ioc_repository.find_matching_with_case(
+            ioc.indicator_type,
+            ioc.value,
+        )
+
+        correlations: list[CorrelationCreate] = []
+
+        for match, case_id in matches:
+
+            # Ignore the IOC itself
+            if match.id == ioc.id:
+                continue
+
+            if ioc.indicator_type == "ipv4":
+                correlations.append(
+                    self.correlate_ip(
+                        case_id=case_id,
+                        source_id=ioc.id,
+                        target_id=match.id,
+                        ip_address=ioc.value,
+                    )
+                )
+
+            elif ioc.indicator_type == "domain":
+                correlations.append(
+                    self.correlate_domain(
+                        case_id=case_id,
+                        source_id=ioc.id,
+                        target_id=match.id,
+                        domain=ioc.value,
+                    )
+                )
+
+            elif ioc.indicator_type == "email":
+                correlations.append(
+                    self.correlate_email(
+                        case_id=case_id,
+                        source_id=ioc.id,
+                        target_id=match.id,
+                        email=ioc.value,
+                    )
+                )
+
+            elif ioc.indicator_type == "url":
+                correlations.append(
+                    self.correlate_url(
+                        case_id=case_id,
+                        source_id=ioc.id,
+                        target_id=match.id,
+                        url=ioc.value,
+                    )
+                )
+
+            elif ioc.indicator_type in {"sha256", "sha1", "md5"}:
+                correlations.append(
+                    self.correlate_hash(
+                        case_id=case_id,
+                        source_id=ioc.id,
+                        target_id=match.id,
+                        sha256=ioc.value,
+                    )
+                )
+
+        return correlations   
