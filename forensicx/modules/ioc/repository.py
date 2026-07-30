@@ -18,19 +18,33 @@ class IocRepository:
         """Store values not already recorded for the evidence item."""
         existing = {
             (indicator.indicator_type, indicator.value)
-            for indicator in self._session.scalars(select(Ioc).where(Ioc.evidence_id == evidence_id))
+            for indicator in self._session.scalars(
+                select(Ioc).where(Ioc.evidence_id == evidence_id)
+            )
         }
+
         records = [
-            Ioc(evidence_id=evidence_id, indicator_type=indicator_type, value=value)
+            Ioc(
+                evidence_id=evidence_id,
+                indicator_type=indicator_type,
+                value=value,
+            )
             for indicator_type, values in extracted.items()
             for value in sorted(values)
             if (indicator_type, value) not in existing
         ]
+
         self._session.add_all(records)
         self._session.flush()
         return records
 
-    def list_for_evidence(self, evidence_id: str, *, offset: int, limit: int) -> list[Ioc]:
+    def list_for_evidence(
+        self,
+        evidence_id: str,
+        *,
+        offset: int,
+        limit: int,
+    ) -> list[Ioc]:
         """Return persisted indicators in stable newest-first order."""
         statement = (
             select(Ioc)
@@ -39,4 +53,36 @@ class IocRepository:
             .offset(offset)
             .limit(limit)
         )
+
         return list(self._session.scalars(statement))
+
+    def find_matching(
+        self,
+        indicator_type: str,
+        value: str,
+    ) -> list[Ioc]:
+        """Return every IOC with the same type and value."""
+        statement = (
+            select(Ioc)
+            .where(Ioc.indicator_type == indicator_type)
+            .where(Ioc.value == value)
+            .order_by(Ioc.created_at.asc())
+        )
+
+        return list(self._session.scalars(statement))
+
+    def exists(
+        self,
+        evidence_id: str,
+        indicator_type: str,
+        value: str,
+    ) -> bool:
+        """Return True if an IOC already exists for an evidence item."""
+        statement = (
+            select(Ioc)
+            .where(Ioc.evidence_id == evidence_id)
+            .where(Ioc.indicator_type == indicator_type)
+            .where(Ioc.value == value)
+        )
+
+        return self._session.scalar(statement) is not None

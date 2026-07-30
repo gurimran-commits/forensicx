@@ -106,3 +106,24 @@ class CorrelationRepository:
         )
 
         return int(self._session.scalar(statement) or 0)
+    
+    def exists_between(
+        self,
+        source_type,
+        source_id,
+        target_type,
+        target_id,
+        correlation_type,
+    ) -> bool:
+        """Return True if the correlation already exists."""
+        statement = (
+            select(func.count())
+            .select_from(Correlation)
+            .where(Correlation.source_type == source_type)
+            .where(Correlation.source_id == source_id)
+            .where(Correlation.target_type == target_type)
+            .where(Correlation.target_id == target_id)
+            .where(Correlation.correlation_type == correlation_type)
+        )
+
+        return bool(self._session.scalar(statement))
