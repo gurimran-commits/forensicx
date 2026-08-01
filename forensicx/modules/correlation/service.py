@@ -115,6 +115,15 @@ class CorrelationService:
 
             for candidate in candidates:
 
+                if self._repository.exists_between(
+                    candidate.source_type,
+                    candidate.source_id,
+                    candidate.target_type,
+                    candidate.target_id,
+                    candidate.correlation_type,
+                ):
+                    continue
+
                 correlation = Correlation(
                     case_id=candidate.case_id,
                     source_type=candidate.source_type,
@@ -129,7 +138,8 @@ class CorrelationService:
                 self._repository.create(correlation)
                 created += 1
 
-        self._session.commit()
+        if created:
+            self._session.commit()
 
         return created
       

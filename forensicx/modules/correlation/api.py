@@ -67,3 +67,21 @@ def list_case_correlations(
 ):
     """Return correlations for a case."""
     return service.list_by_case(case_id)
+@router.post(
+    "/run/{evidence_id}",
+    status_code=status.HTTP_200_OK,
+)
+def run_correlation(
+    evidence_id: str,
+    service: CorrelationService = Depends(get_correlation_service),
+):
+    """
+    Run automatic correlation for one evidence item.
+    """
+
+    created = service.correlate_evidence(evidence_id)
+
+    return {
+        "message": "Correlation completed.",
+        "correlations_created": created,
+    }
