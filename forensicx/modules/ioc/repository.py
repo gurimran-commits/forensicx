@@ -57,7 +57,19 @@ class IocRepository:
         )
 
         return list(self._session.scalars(statement))
+    
+    def get_by_id(
+        self,
+        ioc_id: int,
+    ) -> Ioc | None:
+        """Return one IOC by its identifier."""
+        statement = (
+            select(Ioc)
+            .where(Ioc.id == ioc_id)
+        )
 
+        return self._session.scalar(statement)
+    
     def find_matching(
         self,
         indicator_type: str,
