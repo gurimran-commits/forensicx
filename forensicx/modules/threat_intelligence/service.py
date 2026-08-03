@@ -62,7 +62,7 @@ class ThreatIntelService:
             )
 
             self._repository.create(intel)
-                created.append(intel)
+            created.append(intel)
 
         if created:
             self._session.commit()
