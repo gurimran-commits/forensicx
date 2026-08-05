@@ -8,16 +8,19 @@ from forensicx.modules.ioc.models import Ioc
 from forensicx.modules.threat_intelligence.providers.base import (
     ThreatIntelProvider,
 )
+from forensicx.platform.config import Settings
 
 
 class AbuseIPDBProvider(ThreatIntelProvider):
+
+    def __init__(self, settings: Settings) -> None:
+        super().__init__(settings)
 
     @property
     def name(self) -> str:
         return "abuseipdb"
 
     def lookup(self, ioc: Ioc) -> dict:
-
         return {
             "verdict": "unknown",
             "score": 0,

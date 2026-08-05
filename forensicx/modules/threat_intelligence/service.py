@@ -20,15 +20,19 @@ from forensicx.modules.threat_intelligence.repository import (
     ThreatIntelRepository,
 )
 
+from forensicx.platform.config import get_settings
 
 class ThreatIntelService:
     """Business logic for Threat Intelligence."""
+
+    
 
     def __init__(self, session: Session) -> None:
         self._session = session
         self._repository = ThreatIntelRepository(session)
         self._ioc_repository = IocRepository(session)
-
+        settings = get_settings()
+        
         self._registry = ProviderRegistry()
         
     def enrich_ioc(
