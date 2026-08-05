@@ -17,17 +17,18 @@ from forensicx.modules.threat_intelligence.providers.urlhaus import (
 from forensicx.modules.threat_intelligence.providers.virustotal import (
     VirusTotalProvider,
 )
+from forensicx.platform.config import Settings
 
 
 class ProviderRegistry:
     """Registry of available Threat Intelligence providers."""
 
-    def __init__(self) -> None:
+    def __init__(self, settings: Settings) -> None:
         self._providers = {
-            ThreatSource.VIRUSTOTAL: VirusTotalProvider(),
-            ThreatSource.ABUSEIPDB: AbuseIPDBProvider(),
-            ThreatSource.URLHAUS: URLHausProvider(),
-            ThreatSource.OTX: OTXProvider(),
+            ThreatSource.VIRUSTOTAL: VirusTotalProvider(settings),
+            ThreatSource.ABUSEIPDB: AbuseIPDBProvider(settings),
+            ThreatSource.URLHAUS: URLHausProvider(settings),
+            ThreatSource.OTX: OTXProvider(settings),
         }
 
     def all(self):
