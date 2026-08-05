@@ -7,6 +7,9 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 @dataclass(frozen=True)
 class Settings:
@@ -31,6 +34,14 @@ class Settings:
     log_level: str
 
     request_limit_per_minute: int
+    
+    virustotal_api_key: str = ""
+
+    abuseipdb_api_key: str = ""
+
+    urlhaus_api_key: str = ""
+
+    otx_api_key: str = "" 
 
 
 def _required_secret() -> str:
@@ -55,6 +66,27 @@ def get_settings() -> Settings:
         environment=os.getenv("FORENSICX_ENV", "development").lower(),
         log_level=os.getenv("FORENSICX_LOG_LEVEL", "INFO").upper(),
         request_limit_per_minute=int(os.getenv("FORENSICX_RATE_LIMIT_PER_MINUTE", "120")),
+        
+        virustotal_api_key=os.getenv(
+            "FORENSICX_VIRUSTOTAL_API_KEY",
+            "",
+        ),
+
+        abuseipdb_api_key=os.getenv(
+            "FORENSICX_ABUSEIPDB_API_KEY",
+            "",
+        ),
+
+        urlhaus_api_key=os.getenv(
+            "FORENSICX_URLHAUS_API_KEY",
+            "",
+        ),
+
+        otx_api_key=os.getenv(
+            "FORENSICX_OTX_API_KEY",
+            "",
+        ),
+        
         storage_path=Path(
             os.getenv(
                 "FORENSICX_STORAGE_PATH",
