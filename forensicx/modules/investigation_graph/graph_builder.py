@@ -86,7 +86,20 @@ class InvestigationGraphBuilder:
                     type=NodeType.IOC,
                     label=ioc.value,
                 )
+                correlations = self._correlations.list_by_source(
+                    source_type=EntityType.IOC,
+                    source_id=ioc.id,
+                )
 
+                for correlation in correlations:
+
+                    edges.append(
+                        GraphEdge(
+                            source=f"ioc-{correlation.source_id}",
+                            target=f"ioc-{correlation.target_id}",
+                            type=EdgeType.IOC_MATCH,
+                        )
+                    )
                 nodes.append(node)
 
                 edges.append(
