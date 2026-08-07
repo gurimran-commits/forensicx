@@ -28,6 +28,9 @@ from forensicx.modules.threat_intelligence.api import (
     router as threat_intel_router,
 )
 
+from forensicx.modules.investigation_graph.api import (
+    router as graph_router,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +68,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(custody_router, prefix="/api/v1")
     app.include_router(correlation_router, prefix="/api/v1")
     app.include_router(threat_intel_router,prefix="/api/v1")
-    
+    app.include_router(graph_router, prefix="/api/v1")
     
     @app.get("/", include_in_schema=False)
     async def dashboard_page() -> FileResponse:
