@@ -11,6 +11,7 @@ from forensicx.modules.investigation_graph.models import (
     NodeType,
 )
 
+from forensicx.modules.correlation.models import EntityType
 
 class InvestigationGraphBuilder:
     """Build investigation graphs."""
@@ -45,13 +46,15 @@ class InvestigationGraphBuilder:
                 "edges": [],
             }
 
-        nodes.append(
-            GraphNode(
-                id=f"case-{case.id}",
-                type=NodeType.CASE,
-                label=case.case_number,
-            )
+        case_node = GraphNode(
+            id=f"case-{case.id}",
+            type=NodeType.CASE,
+            label=case.case_number,
         )
+
+        if case_node.id not in seen_nodes:
+            nodes.append(case_node)
+            seen_nodes.add(case_node.id)
 
         evidence_items = self._evidence.list_by_case(case.id)
 
@@ -63,7 +66,9 @@ class InvestigationGraphBuilder:
                 label=evidence.original_filename,
             )
 
-            nodes.append(evidence_node)
+            if evidence_node.id not in seen_nodes:
+                nodes.append(evidence_node)
+                seen_nodes.add(evidence_node.id)
 
             edges.append(
                 GraphEdge(
@@ -100,8 +105,9 @@ class InvestigationGraphBuilder:
                             type=EdgeType.IOC_MATCH,
                         )
                     )
-                nodes.append(node)
-
+                if node.id not in seen_nodes:
+                    nodes.append(node)
+                    seen_nodes.add(node.id)
                 edges.append(
                     GraphEdge(
                         source=f"evidence-{evidence.id}",
@@ -110,7 +116,11 @@ class InvestigationGraphBuilder:
                     )
                 )
 
-                intel_records = self._threats.list_for_ioc(ioc.id)
+                intel_records = self._threats.list_by_ioc(
+                    ioc.id,
+                    offset=0,
+                    limit=10000,
+                )
 
                 for intel in intel_records:
 
@@ -120,7 +130,9 @@ class InvestigationGraphBuilder:
                         label=intel.source.value,
                     )
 
-                    nodes.append(threat_node)
+                    if threat_node.id not in seen_nodes:
+                        nodes.append(threat_node)
+                        seen_nodes.add(threat_node.id)
 
                     edges.append(
                         GraphEdge(
