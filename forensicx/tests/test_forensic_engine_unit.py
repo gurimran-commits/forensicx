@@ -10,6 +10,9 @@ from forensicx.modules.forensic_engine.domain import AnalysisStatus, AnalyzerOut
 from forensicx.modules.forensic_engine.registry import AnalyzerRegistry
 from forensicx.modules.forensic_engine.service import ForensicAnalysisService
 
+from forensicx.modules.cases.models import CaseModel
+from forensicx.modules.chain_of_custody.models import ChainOfCustody
+
 
 def test_registry_discovers_builtin_analyzers() -> None:
     """Built-ins are discovered without a hand-maintained registry list."""
@@ -40,6 +43,9 @@ class _WorkingAnalyzer(BaseAnalyzer):
     def analyze(self, evidence_path: Path) -> AnalyzerOutput:
         return AnalyzerOutput(self.name, self.version, AnalysisStatus.SUCCESS, {"inspected": evidence_path.name})
 
+class _FakeIocService:
+    def extract(self, _evidence_id: str) -> list:
+        return []
 
 def test_service_isolates_analyzer_failure(tmp_path: Path) -> None:
     """A failed plugin produces one failed record while subsequent plugins run."""
@@ -50,6 +56,6 @@ def test_service_isolates_analyzer_failure(tmp_path: Path) -> None:
     captured: list[object] = []
     result_repository = SimpleNamespace(add_all=lambda records: (captured.extend(records), records)[1])
     registry = SimpleNamespace(discover=lambda: [_ExplodingAnalyzer(), _WorkingAnalyzer()])
-    results = ForensicAnalysisService(evidence_repository, result_repository, registry, tmp_path).analyze("evidence-1", "tester")
+    results = ForensicAnalysisService(evidence_repository, result_repository, registry, tmp_path,_FakeIocService(),).analyze("evidence-1", "tester")
     assert [result.status for result in results] == [AnalysisStatus.FAILED, AnalysisStatus.SUCCESS]
     assert len(captured) == 2

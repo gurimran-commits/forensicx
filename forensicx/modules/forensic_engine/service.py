@@ -11,14 +11,24 @@ from forensicx.modules.forensic_engine.registry import AnalyzerRegistry
 from forensicx.modules.forensic_engine.repository import ForensicAnalysisRepository
 from forensicx.platform.errors import ForensicXError
 
+from forensicx.modules.ioc.service import IocExtractionService
+
 LOGGER = logging.getLogger(__name__)
 
 
 class ForensicAnalysisService:
     """Run independently-failing analyzers against immutable stored evidence."""
-    def __init__(self, evidence_repository: EvidenceRepository, repository: ForensicAnalysisRepository, registry: AnalyzerRegistry, storage_root: Path) -> None:
+    def __init__(
+        self,
+        evidence_repository: EvidenceRepository,
+        repository: ForensicAnalysisRepository,
+        registry: AnalyzerRegistry,
+        storage_root: Path,
+        ioc_service: IocExtractionService,
+    ) -> None:
         self._evidence_repository, self._repository, self._registry = evidence_repository, repository, registry
         self._storage_root = storage_root.resolve()
+        self._ioc_service = ioc_service
 
     def analyze(self, evidence_id: str, analyzed_by: str) -> list[ForensicAnalysisResult]:
         """Run all discovered analyzers, recording failure instead of aborting the run."""
@@ -36,7 +46,9 @@ class ForensicAnalysisService:
                 LOGGER.exception("Forensic analyzer %s failed for evidence %s", analyzer.name, evidence_id)
                 outputs.append(AnalyzerOutput(analyzer.name, analyzer.version, AnalysisStatus.FAILED, {}, "Analyzer execution failed"))
         records = [ForensicAnalysisResult(evidence_id=evidence.id, analyzer_name=output.analyzer_name, analyzer_version=output.analyzer_version, status=output.status, findings=output.findings, error_message=output.error_message, analyzed_by=analyzed_by) for output in outputs]
-        return self._repository.add_all(records)
+        persisted = self._repository.add_all(records)
+        self._ioc_service.extract(evidence.id)
+        return persisted
 
     def history(self, evidence_id: str, *, offset: int, limit: int) -> list[ForensicAnalysisResult]:
         """Return persisted results after confirming evidence exists."""

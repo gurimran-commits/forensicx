@@ -12,6 +12,9 @@ from forensicx.modules.forensic_engine.repository import ForensicAnalysisReposit
 from forensicx.modules.forensic_engine.service import ForensicAnalysisService
 from forensicx.platform.config import Settings
 from forensicx.platform.database import configure_session_factory
+from forensicx.modules.ioc.repository import IocRepository
+from forensicx.modules.ioc.service import IocExtractionService
+from forensicx.modules.correlation.service import CorrelationService
 
 
 def test_analysis_results_are_persisted_without_changing_evidence(tmp_path: Path) -> None:
@@ -31,7 +34,17 @@ def test_analysis_results_are_persisted_without_changing_evidence(tmp_path: Path
         session.add(evidence)
         session.flush()
         original_hash, original_status = evidence.sha256, evidence.status
-        service = ForensicAnalysisService(EvidenceRepository(session), ForensicAnalysisRepository(session), AnalyzerRegistry(), storage)
+        service = ForensicAnalysisService(EvidenceRepository(session),
+            ForensicAnalysisRepository(session),  
+            AnalyzerRegistry(),
+            storage ,
+            IocExtractionService(
+                EvidenceRepository(session),
+                IocRepository(session),
+                CorrelationService(session),
+                storage,
+            ),
+        )
         results = service.analyze(evidence.id, "tester")
         session.commit()
         assert len(results) >= 5
