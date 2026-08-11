@@ -29,7 +29,10 @@ def forensic_analysis_service(
         evidence_repository,
         IocRepository(session),
         CorrelationService(session),
-        ThreatIntelService(session),
+        ThreatIntelService(
+            session,
+            request.app.state.settings,
+        )
         request.app.state.settings.storage_path,
     )
 

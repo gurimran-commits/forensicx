@@ -16,6 +16,7 @@ from forensicx.modules.ioc.repository import IocRepository
 from forensicx.modules.ioc.service import IocExtractionService
 from forensicx.modules.correlation.service import CorrelationService
 
+from forensicx.modules.threat_intelligence.service import ThreatIntelService
 
 def test_analysis_results_are_persisted_without_changing_evidence(tmp_path: Path) -> None:
     """Analysis writes only result rows in the request-owned transaction."""
@@ -42,6 +43,7 @@ def test_analysis_results_are_persisted_without_changing_evidence(tmp_path: Path
                 EvidenceRepository(session),
                 IocRepository(session),
                 CorrelationService(session),
+                ThreatIntelService(session,settings),
                 storage,
             ),
         )

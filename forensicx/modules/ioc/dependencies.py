@@ -23,6 +23,9 @@ def ioc_extraction_service(
         EvidenceRepository(session),
         IocRepository(session),
         CorrelationService(session),
-        ThreatIntelService(session),
+        ThreatIntelService(
+            session,
+            request.app.state.settings,
+        )
         request.app.state.settings.storage_path,
     )
