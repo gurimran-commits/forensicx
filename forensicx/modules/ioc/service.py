@@ -11,14 +11,17 @@ from forensicx.modules.ioc.repository import IocRepository
 from forensicx.platform.errors import ForensicXError
 from forensicx.modules.correlation.service import CorrelationService
 
+from forensicx.modules.threat_intelligence.service import ThreatIntelService
+
 class IocExtractionService:
     """Extract and persist supported indicators without modifying evidence."""
 
-    def __init__(self, evidence_repository: EvidenceRepository, repository: IocRepository, correlation_service: CorrelationService, storage_root: Path) -> None:
+    def __init__(self, evidence_repository: EvidenceRepository, repository: IocRepository, correlation_service: CorrelationService, threat_intel_service: ThreatIntelService,storage_root: Path) -> None:
         self._evidence_repository = evidence_repository
         self._repository = repository
         self._correlation_service = correlation_service
         self._storage_root = storage_root.resolve()
+        self._threat_intel_service = threat_intel_service
 
     def extract(self, evidence_id: str) -> list[Ioc]:
         """Read one stored evidence file and store newly discovered indicators."""
@@ -33,7 +36,8 @@ class IocExtractionService:
             evidence.id,
             extract_iocs(text),
         )
-
+        for ioc in records:
+            self._threat_intel_service.enrich_ioc(ioc.id)
         self._correlation_service.correlate_evidence(
             evidence.id,
         )

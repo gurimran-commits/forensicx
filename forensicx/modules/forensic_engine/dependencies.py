@@ -14,6 +14,7 @@ from forensicx.modules.ioc.repository import IocRepository
 from forensicx.modules.ioc.service import IocExtractionService
 from forensicx.platform.dependencies import database_session
 
+from forensicx.modules.threat_intelligence.service import ThreatIntelService
 
 def forensic_analysis_service(
     request: Request,
@@ -28,6 +29,7 @@ def forensic_analysis_service(
         evidence_repository,
         IocRepository(session),
         CorrelationService(session),
+        ThreatIntelService(session),
         request.app.state.settings.storage_path,
     )
 
