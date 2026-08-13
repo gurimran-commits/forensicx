@@ -58,7 +58,16 @@ class ThreatIntelService:
             if self._repository.exists(ioc.id, source):
                 continue
 
-            result = provider.lookup(ioc)
+            try:
+                result = provider.lookup(ioc)
+            except Exception:
+                result = {
+                    "verdict": "error",
+                    "score": 0,
+                    "details": {
+                        "error": "Provider lookup failed",
+                    },
+                }
 
             intel = ThreatIntel(
                 ioc_id=ioc.id,

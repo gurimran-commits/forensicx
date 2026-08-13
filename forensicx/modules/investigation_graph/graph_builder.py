@@ -37,6 +37,7 @@ class InvestigationGraphBuilder:
 
         nodes: list[GraphNode] = []
         edges: list[GraphEdge] = []
+        seen_nodes: set[str] = set()
 
         case = self._cases.get_by_id(case_id)
 

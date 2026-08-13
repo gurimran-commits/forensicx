@@ -37,7 +37,7 @@ class CorrelationEngine:
             source_id=source_id,
             target_type=EntityType.IOC,
             target_id=target_id,
-            correlation_type=CorrelationType.SAME_IP,
+            correlation_type=CorrelationType.SHARES_IP,
             confidence=0.95,
             details={
                 "ip": ip_address,
@@ -56,11 +56,11 @@ class CorrelationEngine:
 
         return CorrelationCreate(
             case_id=case_id,
-            source_type=EntityType.EVIDENCE,
+            source_type=EntityType.IOC,
             source_id=source_id,
-            target_type=EntityType.EVIDENCE,
+            target_type=EntityType.IOC,
             target_id=target_id,
-            correlation_type=CorrelationType.SAME_HASH,
+            correlation_type=CorrelationType.SHARES_HASH,
             confidence=1.0,
             details={
                 "sha256": sha256,
@@ -83,7 +83,7 @@ class CorrelationEngine:
             source_id=source_id,
             target_type=EntityType.IOC,
             target_id=target_id,
-            correlation_type=CorrelationType.SAME_DOMAIN,
+            correlation_type=CorrelationType.SHARES_DOMAIN,
             confidence=0.90,
             details={
                 "domain": domain,
@@ -106,7 +106,7 @@ class CorrelationEngine:
             source_id=source_id,
             target_type=EntityType.IOC,
             target_id=target_id,
-            correlation_type=CorrelationType.SAME_EMAIL,
+            correlation_type=CorrelationType.SHARES_EMAIL,
             confidence=0.90,
             details={
                 "email": email,
@@ -129,7 +129,7 @@ class CorrelationEngine:
             source_id=source_id,
             target_type=EntityType.IOC,
             target_id=target_id,
-            correlation_type=CorrelationType.SAME_URL,
+            correlation_type=CorrelationType.SHARES_URL,
             confidence=0.90,
             details={
                 "url": url,
